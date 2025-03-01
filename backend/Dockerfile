@@ -16,5 +16,6 @@ ENV PORT=8000
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Use shell form of CMD to allow environment variable substitution
-CMD python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} 
+# Use ENTRYPOINT and CMD for better compatibility with Railway
+ENTRYPOINT ["/bin/sh", "-c"]
+CMD ["pip install -r requirements.txt && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
