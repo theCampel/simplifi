@@ -16,5 +16,5 @@ ENV PORT=8000
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Command to run the application - more explicit for Railway
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "${PORT:-8000}"] 
+# Fix the CMD to properly use the PORT environment variable
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} 
