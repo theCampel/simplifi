@@ -11,10 +11,9 @@ COPY . .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8000
 
 # Expose the port the app runs on
-EXPOSE 8000
+EXPOSE ${PORT:-8000}
 
-# Command to run the application - more explicit for Railway
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "${PORT:-8000}"] 
+# Command to run the application - Railway specific format
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} 
