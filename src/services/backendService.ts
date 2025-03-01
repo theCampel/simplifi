@@ -1,7 +1,7 @@
 // API client for connecting to the SimpliFi backend services
 
-// The base URL for the backend API - use env variable in production
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api';
+// The base URL for the backend API - use relative URL with Vite proxy
+const API_BASE_URL = '/api';
 
 // Types for the API responses
 export interface NewsArticle {

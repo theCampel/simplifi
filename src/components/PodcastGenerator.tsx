@@ -1,57 +1,97 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, DownloadCloud, Volume2 } from 'lucide-react';
 import GlassMorphCard from './ui/GlassMorphCard';
 import { useToast } from '@/hooks/use-toast';
+import { generatePodcast, PodcastData } from '@/services/backendService';
 
 const PodcastGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [podcastData, setPodcastData] = useState<PodcastData | null>(null);
   const { toast } = useToast();
 
-  const generatePodcast = () => {
+  const handleGeneratePodcast = async () => {
     setIsGenerating(true);
     setProgress(0);
     setIsComplete(false);
+    setPodcastData(null);
     
-    // Simulate podcast generation with progress updates
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        const newProgress = prev + Math.random() * 10;
-        
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsGenerating(false);
-            setIsComplete(true);
-            toast({
-              title: "Podcast Ready",
-              description: "Your crypto market summary podcast is ready to download",
-              duration: 5000,
-            });
-          }, 500);
-          return 100;
-        }
-        
-        return newProgress;
+    try {
+      // Start progress animation (simulated)
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          // Cap progress at 90% until we get actual results
+          const newProgress = prev + Math.random() * 10;
+          return Math.min(newProgress, 90);
+        });
+      }, 800);
+      
+      // Make the actual API call
+      const result = await generatePodcast({
+        coin_ids: ['bitcoin', 'ethereum'], // Default coins to analyze
+        duration_minutes: 5,
+        voice_type: 'neutral',
+        include_price_analysis: true
       });
-    }, 800);
+      
+      // Stop the interval and set to 100%
+      clearInterval(interval);
+      setProgress(100);
+      setPodcastData(result);
+      
+      setTimeout(() => {
+        setIsGenerating(false);
+        setIsComplete(true);
+        toast({
+          title: "Podcast Ready",
+          description: "Your crypto market summary podcast is ready to download",
+          duration: 5000,
+        });
+      }, 500);
+    } catch (error) {
+      console.error('Error generating podcast:', error);
+      toast({
+        title: "Generation Failed",
+        description: "There was an error generating your podcast",
+        variant: "destructive",
+        duration: 5000,
+      });
+      setIsGenerating(false);
+    }
   };
 
   const downloadPodcast = () => {
-    // In a real app, this would download the actual .mp3 file
+    if (!podcastData || !podcastData.audio_url) {
+      toast({
+        title: "Download Failed",
+        description: "Podcast data is not available",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Get base URL from current window location
+    const baseUrl = window.location.origin;
+    const apiUrl = `${baseUrl}/api`;
+    
+    // Create direct download link
+    const downloadUrl = `${apiUrl}${podcastData.audio_url}`;
+    console.log('Downloading from URL:', downloadUrl);
+    
+    // Create an anchor and trigger the download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `crypto_podcast_${podcastData.podcast_id}.wav`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
       title: "Download Started",
       description: "Your podcast summary is being downloaded",
     });
-    
-    // Reset state after download
-    setTimeout(() => {
-      setIsComplete(false);
-      setProgress(0);
-    }, 2000);
   };
 
   return (
@@ -82,7 +122,7 @@ const PodcastGenerator = () => {
           
           <div className="flex justify-center gap-4">
             <Button
-              onClick={generatePodcast}
+              onClick={handleGeneratePodcast}
               disabled={isGenerating}
               className="relative overflow-hidden group"
             >

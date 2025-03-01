@@ -1,30 +1,38 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+from fastapi.staticfiles import StaticFiles
+import os
+from app.api.router import api_router
 
+# Create FastAPI instance
 app = FastAPI(
-    title="SimpliFi Backend API",
-    description="Backend services for the SimpliFi crypto dashboard",
+    title="SimpliFi Crypto Dashboard API",
+    description="API for the SimpliFi Crypto Dashboard",
     version="0.1.0",
 )
 
-# Configure CORS for your frontend
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Set to your actual frontend URL in production
+    allow_origins=["http://localhost:8080", "http://localhost:3000", "*"],  # Add Vite's default port
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Mount static directory for podcast files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# Include API routes
+app.include_router(api_router, prefix="/api")
+
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the SimpliFi API", "status": "operational"}
+    return {"message": "Welcome to SimpliFi Crypto Dashboard API"}
 
-# Import and include routers
-from app.api import podcasts, news
-app.include_router(podcasts.router, prefix="/api/podcasts", tags=["podcasts"])
-app.include_router(news.router, prefix="/api/news", tags=["news"])
-
+# For debugging
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000) 
