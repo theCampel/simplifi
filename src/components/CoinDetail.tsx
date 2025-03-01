@@ -25,15 +25,16 @@ const CoinDetail = ({
   isLoading, 
   onClose 
 }: CoinDetailProps) => {
-  // Mock chart data (replace with real data when available)
+  // Create safe mock price data even if coinDetail is null
+  const basePrice = coinDetail?.current_price || 1000;
   const mockPriceHistory = [
-    { date: 'Jan', price: coinDetail?.current_price * 0.7 || 0 },
-    { date: 'Feb', price: coinDetail?.current_price * 0.9 || 0 },
-    { date: 'Mar', price: coinDetail?.current_price * 0.8 || 0 },
-    { date: 'Apr', price: coinDetail?.current_price * 1.1 || 0 },
-    { date: 'May', price: coinDetail?.current_price * 1.3 || 0 },
-    { date: 'Jun', price: coinDetail?.current_price * 0.95 || 0 },
-    { date: 'Jul', price: coinDetail?.current_price || 0 },
+    { date: 'Jan', price: basePrice * 0.7 },
+    { date: 'Feb', price: basePrice * 0.9 },
+    { date: 'Mar', price: basePrice * 0.8 },
+    { date: 'Apr', price: basePrice * 1.1 },
+    { date: 'May', price: basePrice * 1.3 },
+    { date: 'Jun', price: basePrice * 0.95 },
+    { date: 'Jul', price: basePrice },
   ];
   
   if (isLoading) {
