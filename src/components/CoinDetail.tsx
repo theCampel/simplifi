@@ -61,7 +61,15 @@ const CoinDetail = ({
     );
   }
 
-  const isPositive = coinDetail.price_change_percentage_24h >= 0;
+  // Safely extract values with fallbacks to prevent undefined errors
+  const currentPrice = coinDetail.current_price || 0;
+  const priceChange = coinDetail.price_change_percentage_24h || 0;
+  const isPositive = priceChange >= 0;
+  const marketCap = coinDetail.market_cap || 0;
+  const volume = coinDetail.total_volume || 0;
+  const high24h = coinDetail.high_24h || 0;
+  const low24h = coinDetail.low_24h || 0;
+  const description = coinDetail.description?.en || '';
   
   return (
     <GlassMorphCard className="p-5 animate-fade-in overflow-hidden">
@@ -76,11 +84,13 @@ const CoinDetail = ({
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center">
-            <img 
-              src={coinDetail.image} 
-              alt={coinDetail.name} 
-              className="w-8 h-8 mr-2 rounded-full" 
-            />
+            {coinDetail.image && (
+              <img 
+                src={coinDetail.image} 
+                alt={coinDetail.name} 
+                className="w-8 h-8 mr-2 rounded-full" 
+              />
+            )}
             <h2 className="text-xl font-semibold">{coinDetail.name}</h2>
             <span className="ml-2 text-sm text-muted-foreground uppercase">
               {coinDetail.symbol}
@@ -90,10 +100,10 @@ const CoinDetail = ({
         
         <div className="text-right">
           <p className="text-xl font-bold">
-            ${coinDetail.current_price.toLocaleString()}
+            ${currentPrice.toLocaleString()}
           </p>
           <p className={`text-sm font-medium ${isPositive ? 'text-crypto-green' : 'text-crypto-red'}`}>
-            {isPositive ? '+' : ''}{coinDetail.price_change_percentage_24h.toFixed(2)}%
+            {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
           </p>
         </div>
       </div>
@@ -143,31 +153,31 @@ const CoinDetail = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div className="bg-secondary/30 rounded-lg p-3">
           <p className="text-xs text-muted-foreground">Market Cap</p>
-          <p className="font-semibold">${coinDetail.market_cap.toLocaleString()}</p>
+          <p className="font-semibold">${marketCap.toLocaleString()}</p>
         </div>
         <div className="bg-secondary/30 rounded-lg p-3">
           <p className="text-xs text-muted-foreground">24h Volume</p>
-          <p className="font-semibold">${coinDetail.total_volume.toLocaleString()}</p>
+          <p className="font-semibold">${volume.toLocaleString()}</p>
         </div>
         <div className="bg-secondary/30 rounded-lg p-3">
           <p className="text-xs text-muted-foreground">24h High</p>
-          <p className="font-semibold">${coinDetail.high_24h.toLocaleString()}</p>
+          <p className="font-semibold">${high24h.toLocaleString()}</p>
         </div>
         <div className="bg-secondary/30 rounded-lg p-3">
           <p className="text-xs text-muted-foreground">24h Low</p>
-          <p className="font-semibold">${coinDetail.low_24h.toLocaleString()}</p>
+          <p className="font-semibold">${low24h.toLocaleString()}</p>
         </div>
       </div>
       
       {/* Description */}
-      {coinDetail.description && (
+      {description && (
         <div className="mt-4">
           <h3 className="text-sm font-medium mb-2">About {coinDetail.name}</h3>
           <div 
             className="text-sm text-muted-foreground overflow-y-auto max-h-[150px] pr-2"
             dangerouslySetInnerHTML={{ 
-              __html: coinDetail.description.en.substring(0, 300) + 
-                (coinDetail.description.en.length > 300 ? '...' : '') 
+              __html: description.substring(0, 300) + 
+                (description.length > 300 ? '...' : '') 
             }}
           />
         </div>
