@@ -10,10 +10,10 @@ const Index = () => {
       <div className="container py-8 px-4 md:px-6 mx-auto max-w-7xl">
         <header className="mb-8 text-center">
           <h1 className="text-4xl font-bold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-crypto-blue to-crypto-indigo">
-            Crypto Harmony
+            SimpliFi
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Track, analyze, and stay updated with the crypto market in real-time
+            Take the stress out of crypto. SimpliFi it.
           </p>
         </header>
 

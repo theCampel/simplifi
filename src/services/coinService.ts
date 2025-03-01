@@ -1,4 +1,3 @@
-
 // Types for our coin data
 export interface Coin {
   id: string;
@@ -18,6 +17,12 @@ export interface Coin {
 export interface CoinDetail extends Coin {
   description: { en: string };
   market_data: {
+    current_price: { usd: number };
+    market_cap: { usd: number };
+    total_volume: { usd: number };
+    high_24h: { usd: number };
+    low_24h: { usd: number };
+    price_change_percentage_24h: number;
     ath: { usd: number };
     atl: { usd: number };
     circulating_supply: number;
@@ -26,7 +31,19 @@ export interface CoinDetail extends Coin {
   };
 }
 
+export interface HistoricalPriceData {
+  prices: [number, number][]; // [timestamp, price]
+  market_caps: [number, number][];
+  total_volumes: [number, number][];
+}
+
+export interface ChartDataPoint {
+  date: string;
+  price: number;
+}
+
 const API_BASE_URL = 'https://api.coingecko.com/api/v3';
+const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
 // Mock data for when API fails (CoinGecko has rate limits)
 const MOCK_COINS: Coin[] = [
@@ -196,9 +213,15 @@ export const getCoinDetails = async (coinId: string): Promise<CoinDetail | null>
       return {
         ...mockCoin,
         description: { 
-          en: "This is a mock description since the CoinGecko API rate limit has been reached. In a production environment, you would implement proper API key authentication and rate limit handling." 
+          en: "This is a mock description since the CoinGecko API rate limit has been reached." 
         },
         market_data: {
+          current_price: { usd: mockCoin.current_price },
+          market_cap: { usd: mockCoin.market_cap },
+          total_volume: { usd: mockCoin.total_volume },
+          high_24h: { usd: mockCoin.high_24h },
+          low_24h: { usd: mockCoin.low_24h },
+          price_change_percentage_24h: mockCoin.price_change_percentage_24h,
           ath: { usd: mockCoin.current_price * 1.5 },
           atl: { usd: mockCoin.current_price * 0.5 },
           circulating_supply: 19000000,
@@ -219,9 +242,15 @@ export const getCoinDetails = async (coinId: string): Promise<CoinDetail | null>
     return {
       ...mockCoin,
       description: { 
-        en: "This is a mock description since there was an error fetching data from the CoinGecko API. In a production environment, you would implement proper error handling and fallbacks." 
+        en: "This is a mock description since there was an error fetching data from the CoinGecko API. " 
       },
       market_data: {
+        current_price: { usd: mockCoin.current_price },
+        market_cap: { usd: mockCoin.market_cap },
+        total_volume: { usd: mockCoin.total_volume },
+        high_24h: { usd: mockCoin.high_24h },
+        low_24h: { usd: mockCoin.low_24h },
+        price_change_percentage_24h: mockCoin.price_change_percentage_24h,
         ath: { usd: mockCoin.current_price * 1.5 },
         atl: { usd: mockCoin.current_price * 0.5 },
         circulating_supply: 19000000,
@@ -230,4 +259,64 @@ export const getCoinDetails = async (coinId: string): Promise<CoinDetail | null>
       }
     };
   }
+};
+
+// Get historical price data for a coin
+export const getCoinHistoricalData = async (
+  coinId: string, 
+  days: number = 30
+): Promise<ChartDataPoint[]> => {
+  try {
+    const url = `${API_BASE_URL}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+    const headers: HeadersInit = {};
+    
+    // Add API key if available
+    if (API_KEY) {
+      headers['x-cg-api-key'] = API_KEY;
+    }
+    
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      console.info('CoinGecko API rate limit reached, using mock data for historical prices');
+      return generateMockHistoricalData(coinId, days);
+    }
+    
+    const data: HistoricalPriceData = await response.json();
+    
+    // Transform the data for the chart
+    return data.prices.map(([timestamp, price]) => ({
+      date: new Date(timestamp).toLocaleDateString(),
+      price
+    }));
+  } catch (error) {
+    console.error(`Error fetching historical data for coin ${coinId}:`, error);
+    return generateMockHistoricalData(coinId, days);
+  }
+};
+
+// Generate mock historical data when API fails
+const generateMockHistoricalData = (coinId: string, days: number): ChartDataPoint[] => {
+  // Find the coin in our mock data to use its price as a base
+  const mockCoin = MOCK_COINS.find(c => c.id === coinId);
+  const basePrice = mockCoin?.current_price || 1000;
+  
+  const result: ChartDataPoint[] = [];
+  const now = new Date();
+  
+  for (let i = days; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    
+    // Generate a somewhat realistic price variation
+    const randomFactor = 0.9 + (Math.random() * 0.2); // Between 0.9 and 1.1
+    const dayFactor = 1 + ((days - i) / days) * 0.3; // Trending upward over time
+    
+    result.push({
+      date: date.toLocaleDateString(),
+      price: basePrice * randomFactor * dayFactor
+    });
+  }
+  
+  return result;
 };
