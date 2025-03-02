@@ -1,69 +1,73 @@
-# Welcome to your Lovable project
+# SimpliFi
 
-## Project info
+A comprehensive cryptocurrency dashboard application with portfolio tracking, real-time market data, and AI-generated insights.
 
-**URL**: https://lovable.dev/projects/f45be172-eab2-46a9-8d50-3b1be67066dd
+## Project Structure
 
-## How can I edit this code?
+This project is organized with a clear separation between frontend and backend:
 
-There are several ways of editing your application.
+- `/frontend`: React application built with Vite, TypeScript, and shadcn/ui components
+- `/backend`: FastAPI server providing API endpoints for crypto data and AI features
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f45be172-eab2-46a9-8d50-3b1be67066dd) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v18+) and npm for the frontend
+- Python 3.11+ for the backend
+- Git
 
-**Use your preferred IDE**
+### Frontend Setup
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Navigate to the frontend directory
+cd frontend
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install dependencies
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The frontend will be available at http://localhost:5173
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Backend Setup
 
-**Use GitHub Codespaces**
+```bash
+# Navigate to the backend directory
+cd backend
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-## What technologies are used for this project?
+# Install dependencies
+pip install -r requirements.txt
 
-This project is built with .
+# Start the development server
+uvicorn app.main:app --reload
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The backend API will be available at http://localhost:8000
 
-## How can I deploy this project?
+## Features
 
-Simply open [Lovable](https://lovable.dev/projects/f45be172-eab2-46a9-8d50-3b1be67066dd) and click on Share -> Publish.
+- Real-time cryptocurrency price tracking
+- Portfolio management and performance tracking
+- News aggregation and AI-generated summaries
+- Interactive charts and analytics
 
-## I want to use a custom domain - is that possible?
+## Environment Variables
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+See the respective README files in the `/frontend` and `/backend` directories for details on required environment variables.
+
+## Deployment
+
+This application can be deployed as two separate services:
+- Frontend: Can be deployed to Netlify, Vercel, or other static hosting services
+- Backend: Designed to be deployed on Railway or any container platform
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
