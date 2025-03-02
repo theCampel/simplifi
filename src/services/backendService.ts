@@ -10,8 +10,9 @@ export interface NewsArticle {
   url: string;
   timestamp: string;
   summary: string;
-  sentiment: number;
-  sentiment_label: string;
+  sentiment?: number;
+  sentiment_label?: string;
+  mentioned_coins?: string[];
 }
 
 export interface NewsOverview {
@@ -44,6 +45,13 @@ export interface VoiceOption {
   description: string;
 }
 
+// New interface for the news articles response
+export interface NewsArticlesResponse {
+  articles: NewsArticle[];
+  query: string;
+  timestamp: string;
+}
+
 // News API functions
 export const getNewsSummary = async (): Promise<NewsSummary> => {
   try {
@@ -69,6 +77,27 @@ export const getTrendingTopics = async (): Promise<any[]> => {
     return data.data;
   } catch (error) {
     console.error('Error fetching trending topics:', error);
+    throw error;
+  }
+};
+
+export const getNewsArticles = async (coins?: string[]): Promise<NewsArticlesResponse> => {
+  try {
+    let url = `${API_BASE_URL}/news/articles`;
+    
+    // Add coins as query parameter if provided
+    if (coins && coins.length > 0) {
+      url += `?coins=${coins.join(',')}`;
+    }
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch news articles: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.data as NewsArticlesResponse;
+  } catch (error) {
+    console.error('Error fetching news articles:', error);
     throw error;
   }
 };

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 const SupportSection = () => {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
-  const phoneNumber = "+1 (800) 123-4567";
+  const phoneNumber = "+1 (406) 226-8261";
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(phoneNumber);
@@ -30,9 +30,9 @@ const SupportSection = () => {
         </div>
         
         <div className="flex-1 text-center md:text-left">
-          <h3 className="text-xl font-semibold mb-1">Need Help?</h3>
+          <h3 className="text-xl font-semibold mb-1">Ring Gary</h3>
           <p className="text-muted-foreground mb-2">
-            Our crypto experts are available 24/7 to assist you with any questions.
+            Gary is always on the line. He never EVER sleeps.
           </p>
           
           <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">

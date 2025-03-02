@@ -1,8 +1,9 @@
-
 import React from 'react';
 import CoinTracker from '@/components/CoinTracker';
 import PodcastGenerator from '@/components/PodcastGenerator';
 import SupportSection from '@/components/SupportSection';
+import CoinNews from '@/components/CoinNews';
+import GlassMorphCard from '@/components/ui/GlassMorphCard';
 
 const Index = () => {
   return (
@@ -24,7 +25,12 @@ const Index = () => {
           
           <div className="space-y-8">
             <PodcastGenerator />
+            
             <SupportSection />
+            
+            <GlassMorphCard className="p-5">
+              <CoinNews coinName={null} />
+            </GlassMorphCard>
           </div>
         </div>
       </div>

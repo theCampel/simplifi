@@ -40,7 +40,7 @@ const PodcastGenerator = () => {
             return Math.min(prev + progressStep * 0.3, 90);
           }
         });
-      }, 1500); // Increased from 800ms to 1500ms for slower updates
+      }, 1000); // Increased from 800ms to 1500ms for slower updates
       
       // Make the actual API call
       const result = await generatePodcast({
@@ -114,9 +114,9 @@ const PodcastGenerator = () => {
         <div className="bg-primary/10 p-3 rounded-full mb-4">
           <Volume2 className="h-6 w-6 text-primary" />
         </div>
-        <h3 className="text-xl font-semibold mb-1">Podcast Summary Generator</h3>
+        <h3 className="text-xl font-semibold mb-1">Crypto, SimpliFied</h3>
         <p className="text-muted-foreground mb-4 max-w-md">
-          Generate an AI-narrated podcast summarizing the latest crypto market movements and trends.
+          Listen now. You'll be glad you did when you're rich.
         </p>
         
         <div className="w-full max-w-md mt-4">

@@ -16,6 +16,7 @@ import {
   CartesianGrid, 
   Tooltip 
 } from 'recharts';
+import CoinNews from './CoinNews';
 
 interface CoinDetailProps {
   coinDetail: CoinDetailType | null;
@@ -333,6 +334,11 @@ const CoinDetail = ({
           />
         </div>
       )}
+      
+      {/* News Section */}
+      <div className="mt-4 border-t border-border/40 pt-4">
+        <CoinNews coinName={coinDetail.name} />
+      </div>
     </GlassMorphCard>
   );
 };
