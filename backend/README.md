@@ -16,7 +16,10 @@ This is the backend service for the Crypto Harmony Dashboard, providing API endp
 - **ASGI Server**: Uvicorn
 - **Data Validation**: Pydantic
 - **HTTP Client**: HTTPX
-- **ML/AI**: OpenAI integration
+- **News Sources:** NewsAPI
+- **Market Data:** 2x CoinGecko 😭
+- **ML/AI**: OpenAI, Grok, ElevenLabs. 
+- **Deployment / Accessible Endpoints:** Docker/Railway
 
 ## Local Development
 
@@ -49,18 +52,15 @@ This is the backend service for the Crypto Harmony Dashboard, providing API endp
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory with the following variables:
+Create a `.env` file in the backend directory with the following variables. Example as shown:
 
 ```
-# Server settings
-PORT=8000
-
-# OpenAI API
-OPENAI_API_KEY=your_openai_api_key
-
-# Other API keys (as needed)
-# COINMARKETCAP_API_KEY=your_key
-# CRYPTOCOMPARE_API_KEY=your_key
+OPENAI_API_KEY=OPENAI_API_KEY
+ELEVENLABS_API_KEY=ELEVENLABS_API_KEY
+NEWSAPI_KEY=NEWSAPI_KEY
+XAI_API_KEY=XAI_API_KEY
+COINGECKO_API_KEY=COINGECKO_API_KEY
+COINGECKO_API_KEY_2=COINGECKO_API_KEY_2
 ```
 
 ## Project Structure
