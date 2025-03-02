@@ -20,13 +20,27 @@ const PodcastGenerator = () => {
     
     try {
       // Start progress animation (simulated)
+      // Slower, more predictable progress
+      let progressStep = 1;
       const interval = setInterval(() => {
         setProgress(prev => {
-          // Cap progress at 90% until we get actual results
-          const newProgress = prev + Math.random() * 10;
-          return Math.min(newProgress, 90);
+          // More gradual progression with smaller, increasingly slower steps
+          // This creates a more realistic "work in progress" feel
+          if (prev < 30) {
+            // Start relatively quick (initial setup phase)
+            return prev + progressStep;
+          } else if (prev < 60) {
+            // Slow down a bit (main processing phase)
+            return prev + progressStep * 0.7;
+          } else if (prev < 80) {
+            // Slow down more (complex processing phase)
+            return prev + progressStep * 0.5;
+          } else {
+            // Very slow for the final phase where it often "feels stuck" anyway
+            return Math.min(prev + progressStep * 0.3, 90);
+          }
         });
-      }, 800);
+      }, 1500); // Increased from 800ms to 1500ms for slower updates
       
       // Make the actual API call
       const result = await generatePodcast({

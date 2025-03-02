@@ -23,6 +23,11 @@ app.add_middleware(
 # Mount static directory for podcast files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
+
+# Ensure podcasts directory exists
+podcasts_dir = os.path.join(static_dir, "podcasts")
+os.makedirs(podcasts_dir, exist_ok=True)
+
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Include API routes

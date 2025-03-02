@@ -36,18 +36,26 @@ async def download_podcast(podcast_id: str):
     try:
         # Get the static directory path
         static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "podcasts")
-        # Create the full path to the WAV file (our demo uses WAV instead of MP3 for simplicity)
-        wav_file_path = os.path.join(static_dir, f"{podcast_id}.wav")
+        # Create the full path to the MP3 file
+        mp3_file_path = os.path.join(static_dir, f"{podcast_id}.mp3")
         
         # Check if the file exists
-        if not os.path.exists(wav_file_path):
-            raise HTTPException(status_code=404, detail="Podcast file not found")
+        if not os.path.exists(mp3_file_path):
+            # If MP3 doesn't exist, try WAV as a fallback for compatibility with old files
+            wav_file_path = os.path.join(static_dir, f"{podcast_id}.wav")
+            if not os.path.exists(wav_file_path):
+                raise HTTPException(status_code=404, detail="Podcast file not found")
+            return FileResponse(
+                path=wav_file_path,
+                filename=f"crypto_podcast_{podcast_id}.wav",
+                media_type="audio/wav"
+            )
         
-        # Return the file as a downloadable response
+        # Return the MP3 file as a downloadable response
         return FileResponse(
-            path=wav_file_path,
-            filename=f"crypto_podcast_{podcast_id}.wav",
-            media_type="audio/wav"
+            path=mp3_file_path,
+            filename=f"crypto_podcast_{podcast_id}.mp3",
+            media_type="audio/mpeg"
         )
     except Exception as e:
         if isinstance(e, HTTPException):

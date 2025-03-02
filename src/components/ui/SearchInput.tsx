@@ -13,7 +13,7 @@ const SearchInput = ({
   onSearch,
   className,
   placeholder = 'Search...',
-  debounceTime = 100, // Reduced from 300ms to 150ms for faster response
+  debounceTime = 100, 
   ...props
 }: SearchInputProps) => {
   const [value, setValue] = useState('');
