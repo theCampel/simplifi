@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any, Optional
-from app.services.news_aggregator import get_latest_news_summary, get_crypto_news
+from app.services.news_aggregator import get_crypto_news
 
 router = APIRouter()
 
