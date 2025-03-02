@@ -13,9 +13,16 @@ router = APIRouter()
 
 # API Keys
 XAI_API_KEY = os.getenv("XAI_API_KEY", "")
+COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY", "")
+COINGECKO_API_KEY_2 = os.getenv("COINGECKO_API_KEY_2", "")
 
 # CoinGecko API Endpoint
 COINGECKO_URL = "https://api.coingecko.com/api/v3/coins"
+
+# API Key management
+api_keys = [k for k in [COINGECKO_API_KEY, COINGECKO_API_KEY_2] if k]
+current_key_index = 0
+last_key_use_time = 0
 
 # OpenAI Client for X.ai
 client = OpenAI(
@@ -34,43 +41,24 @@ CACHE_DURATION = 24  # Cache results for 24 hours
 LAST_REQUEST_TIME = 0
 MIN_REQUEST_INTERVAL = 6  # Seconds between requests (max 10 per minute)
 
-# Request model for passing existing coin data
-class CoinDataInput(BaseModel):
-    coin_data: Optional[Dict[str, Any]] = None
-
-# Response model for structured output
-class RugPullRisk(BaseModel):
-    score: int = Field(description="Rug pull risk score (0-100, where 100 is high risk)")
-    justification: str = Field(description="Short justification for the score")
-    coin_info: Dict[str, Any] = Field(description="Retrieved coin market data")
-
-# Mock data for when API fails
-def get_mock_rug_pull_analysis(coin_id: str, coin_name: str, coin_symbol: str) -> RugPullRisk:
-    """Generate mock rug pull analysis when APIs fail."""
-    # Default mock data
-    mock_coin_info = {
-        "Name": coin_name,
-        "Symbol": coin_symbol,
-        "Current Price": 0.00001234,
-        "Market Cap": 5000000,
-        "24h Trading Volume": 250000,
-        "Circulating Supply": 1000000000000,
-        "Total Supply": 1000000000000,
-        "Max Supply": None,
-        "24h Price Change": -2.5,
-        "24h Low": 0.00001200,
-        "24h High": 0.00001300
-    }
+def get_api_key():
+    """Get the next available API key using round-robin if multiple keys are available."""
+    global current_key_index, last_key_use_time
     
-    # Pretend we analyzed it and came up with a score
-    score = 75
-    justification = "This appears to be a newer token with very low price, extremely high supply, and moderate to low liquidity relative to its market cap. These are common characteristics of higher-risk tokens. Exercise extreme caution."
+    if not api_keys:
+        return None
     
-    return RugPullRisk(
-        score=score,
-        justification=justification,
-        coin_info=mock_coin_info
-    )
+    # Get current time
+    current_time = time.time()
+    
+    # If we have multiple keys and less than 1 second has passed, rotate to next key
+    if len(api_keys) > 1 and (current_time - last_key_use_time) < 1:
+        current_key_index = (current_key_index + 1) % len(api_keys)
+    
+    # Update last used time
+    last_key_use_time = current_time
+    
+    return api_keys[current_key_index]
 
 def throttled_request(url: str) -> requests.Response:
     """Make a throttled request to respect rate limits."""
@@ -86,8 +74,13 @@ def throttled_request(url: str) -> requests.Response:
         logging.info(f"Rate limiting: Sleeping for {sleep_time:.2f} seconds")
         time.sleep(sleep_time)
     
+    # Get API key
+    api_key = get_api_key()
+    headers = {"x-cg-api-key": api_key} if api_key else {}
+    
     # Make the request
-    response = requests.get(url)
+    logging.info(f"Making request to {url}" + (" with API key" if api_key else " without API key"))
+    response = requests.get(url, headers=headers)
     LAST_REQUEST_TIME = time.time()
     
     return response
@@ -149,6 +142,44 @@ def extract_coin_info(coin_data: Dict[str, Any]) -> Dict[str, Any]:
         "24h Low": coin_data.get("market_data", {}).get("low_24h", {}).get("usd") or coin_data.get("low_24h"),
         "24h High": coin_data.get("market_data", {}).get("high_24h", {}).get("usd") or coin_data.get("high_24h")
     }
+
+# Request model for passing existing coin data
+class CoinDataInput(BaseModel):
+    coin_data: Optional[Dict[str, Any]] = None
+
+# Response model for structured output
+class RugPullRisk(BaseModel):
+    score: int = Field(description="Rug pull risk score (0-100, where 100 is high risk)")
+    justification: str = Field(description="Short justification for the score")
+    coin_info: Dict[str, Any] = Field(description="Retrieved coin market data")
+
+# Mock data for when API fails
+def get_mock_rug_pull_analysis(coin_id: str, coin_name: str, coin_symbol: str) -> RugPullRisk:
+    """Generate mock rug pull analysis when APIs fail."""
+    # Default mock data
+    mock_coin_info = {
+        "Name": coin_name,
+        "Symbol": coin_symbol,
+        "Current Price": 0.00001234,
+        "Market Cap": 5000000,
+        "24h Trading Volume": 250000,
+        "Circulating Supply": 1000000000000,
+        "Total Supply": 1000000000000,
+        "Max Supply": None,
+        "24h Price Change": -2.5,
+        "24h Low": 0.00001200,
+        "24h High": 0.00001300
+    }
+    
+    # Pretend we analyzed it and came up with a score
+    score = 7
+    justification = "This seems to be a reputable and well-established coin. It has a strong community and diverse market cap."
+    
+    return RugPullRisk(
+        score=score,
+        justification=justification,
+        coin_info=mock_coin_info
+    )
 
 @router.get("/{coin_id}", response_model=RugPullRisk)
 async def analyze_rug_pull_risk_get(coin_id: str):

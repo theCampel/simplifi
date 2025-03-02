@@ -42,8 +42,65 @@ export interface ChartDataPoint {
   price: number;
 }
 
+/**
+ * CoinGecko API Key Manager
+ * Manages multiple API keys and rotates between them to avoid rate limiting
+ */
+class ApiKeyManager {
+  private keys: string[] = [];
+  private currentKeyIndex: number = 0;
+  private lastUsedTime: number = 0;
+  private cooldownPeriod: number = 1000; // 1 second cooldown between requests
+
+  constructor() {
+    this.initializeKeys();
+  }
+
+  private initializeKeys() {
+    // Get API keys from environment variables
+    const primaryKey = import.meta.env.VITE_COINGECKO_API_KEY;
+    const secondaryKey = import.meta.env.VITE_COINGECKO_API_KEY_2;
+    
+    if (primaryKey) this.keys.push(primaryKey);
+    if (secondaryKey) this.keys.push(secondaryKey);
+    
+    console.log(`Initialized API key manager with ${this.keys.length} keys`);
+  }
+
+  /**
+   * Get the next available API key
+   * @returns API key or empty string if no keys are available
+   */
+  public getKey(): string {
+    if (this.keys.length === 0) return '';
+    
+    // Get current time
+    const now = Date.now();
+    
+    // If we have multiple keys and we're within cooldown period, rotate to next key
+    if (this.keys.length > 1 && (now - this.lastUsedTime) < this.cooldownPeriod) {
+      this.currentKeyIndex = (this.currentKeyIndex + 1) % this.keys.length;
+    }
+    
+    // Update last used time
+    this.lastUsedTime = now;
+    
+    return this.keys[this.currentKeyIndex];
+  }
+
+  /**
+   * Get headers with API key if available
+   */
+  public getHeaders(): HeadersInit {
+    const key = this.getKey();
+    return key ? { 'x-cg-api-key': key } : {};
+  }
+}
+
+// Initialize the API key manager
+const apiKeyManager = new ApiKeyManager();
+
 const API_BASE_URL = 'https://api.coingecko.com/api/v3';
-const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
 // Mock data for when API fails (CoinGecko has rate limits)
 const MOCK_COINS: Coin[] = [
@@ -137,7 +194,8 @@ const MOCK_COINS: Coin[] = [
 export const getTopCoins = async (perPage = 20, page = 1): Promise<Coin[]> => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=24h`
+      `${API_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=24h`,
+      { headers: apiKeyManager.getHeaders() }
     );
     
     if (!response.ok) {
@@ -178,7 +236,10 @@ export const searchCoins = async (query: string): Promise<Coin[]> => {
         console.log(`Searching for coins matching "${query}"...`);
         
         // First search for coins that match the query
-        const searchResponse = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+        const searchResponse = await fetch(
+          `${API_BASE_URL}/search?query=${encodeURIComponent(query)}`,
+          { headers: apiKeyManager.getHeaders() }
+        );
         
         if (!searchResponse.ok) {
           if (searchResponse.status === 429) {
@@ -198,13 +259,12 @@ export const searchCoins = async (query: string): Promise<Coin[]> => {
         }
         
         console.log(`Found ${searchData.coins.length} matching coins, fetching details...`);
-        const coinIds = searchData.coins.slice(0, 10).map((coin: any) => coin.id).join(',');
         
-        if (!coinIds) return filteredMockCoins;
-        
-        // Then fetch detailed data for those coins
+        // Then get detailed market data for those coins
+        const coinIds = searchData.coins.slice(0, 10).map(c => c.id).join(',');
         const coinsResponse = await fetch(
-          `${API_BASE_URL}/coins/markets?vs_currency=usd&ids=${coinIds}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`
+          `${API_BASE_URL}/coins/markets?vs_currency=usd&ids=${coinIds}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`,
+          { headers: apiKeyManager.getHeaders() }
         );
         
         if (!coinsResponse.ok) {
@@ -237,7 +297,8 @@ export const searchCoins = async (query: string): Promise<Coin[]> => {
 export const getCoinDetails = async (coinId: string): Promise<CoinDetail | null> => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`
+      `${API_BASE_URL}/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`,
+      { headers: apiKeyManager.getHeaders() }
     );
     
     if (!response.ok) {
@@ -304,12 +365,7 @@ export const getCoinHistoricalData = async (
 ): Promise<ChartDataPoint[]> => {
   try {
     const url = `${API_BASE_URL}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
-    const headers: HeadersInit = {};
-    
-    // Add API key if available
-    if (API_KEY) {
-      headers['x-cg-api-key'] = API_KEY;
-    }
+    const headers: HeadersInit = apiKeyManager.getHeaders();
     
     const response = await fetch(url, { headers });
     
