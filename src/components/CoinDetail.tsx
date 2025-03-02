@@ -342,7 +342,7 @@ const CoinDetail = ({
       </div>
       
       {/* Rug Pull Analysis Section */}
-      <RugPullAnalysis coinId={coinDetail.id} />
+      <RugPullAnalysis coinId={coinDetail.id} coinData={coinDetail} />
     </GlassMorphCard>
   );
 };

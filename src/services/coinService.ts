@@ -142,14 +142,14 @@ export const getTopCoins = async (perPage = 20, page = 1): Promise<Coin[]> => {
     
     if (!response.ok) {
       console.info('CoinGecko API rate limit reached, using mock data');
-      return MOCK_COINS;
+      return MOCK_COINS.slice(0, perPage);
     }
     
     return await response.json();
   } catch (error) {
     console.error('Error fetching top coins:', error);
     // Return mock data instead of empty array to ensure UI still works
-    return MOCK_COINS;
+    return MOCK_COINS.slice(0, perPage);
   }
 };
 

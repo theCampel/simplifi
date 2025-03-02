@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,7 +23,7 @@ const CoinTracker = () => {
     isLoading: isLoadingTop 
   } = useQuery({
     queryKey: ['topCoins'],
-    queryFn: () => getTopCoins(25),
+    queryFn: () => getTopCoins(9),
     staleTime: 60000, // 1 minute
   });
   

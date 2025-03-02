@@ -1,27 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Info, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Info, AlertCircle, CheckCircle, Loader2, Hourglass } from 'lucide-react';
 import { getRugPullAnalysis, RugPullRisk } from '@/services/rugPullService';
 
 interface RugPullAnalysisProps {
   coinId: string;
+  coinData?: any; // Optional existing coin data to prevent duplicate API calls
 }
 
-const RugPullAnalysis: React.FC<RugPullAnalysisProps> = ({ coinId }) => {
+const RugPullAnalysis: React.FC<RugPullAnalysisProps> = ({ coinId, coinData }) => {
   const [analysis, setAnalysis] = useState<RugPullRisk | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   useEffect(() => {
     const fetchAnalysis = async () => {
+      if (!coinId) return;
+      
       setIsLoading(true);
       setError(null);
+      setIsRateLimited(false);
       
       try {
-        const data = await getRugPullAnalysis(coinId);
+        // Pass the existing coin data to avoid duplicate CoinGecko API calls
+        const data = await getRugPullAnalysis(coinId, coinData);
         if (data) {
           setAnalysis(data);
         } else {
-          setError('Failed to fetch rug pull analysis');
+          // Check if the error might be due to rate limiting
+          setIsRateLimited(true);
+          setError('API rate limits reached. Using cached data if available.');
         }
       } catch (err) {
         setError('An error occurred while analyzing rug pull risk');
@@ -32,7 +40,7 @@ const RugPullAnalysis: React.FC<RugPullAnalysisProps> = ({ coinId }) => {
     };
     
     fetchAnalysis();
-  }, [coinId]);
+  }, [coinId, coinData]);
   
   // Function to determine risk level and styling
   const getRiskInfo = (score: number) => {
@@ -88,8 +96,22 @@ const RugPullAnalysis: React.FC<RugPullAnalysisProps> = ({ coinId }) => {
           <AlertTriangle className="h-4 w-4 text-crypto-yellow" />
           Rug Pull Analysis
         </h3>
-        <div className="bg-secondary/30 rounded-lg p-4 text-sm text-muted-foreground">
-          Unable to perform rug pull analysis at this time.
+        <div className="bg-secondary/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            {isRateLimited ? (
+              <Hourglass className="h-5 w-5 text-crypto-yellow" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-crypto-red" />
+            )}
+            <span className="text-sm font-medium">
+              {isRateLimited ? 'CoinGecko API Rate Limit Reached' : 'Unable to load analysis'}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isRateLimited
+              ? 'Analysis will be available once API rate limits reset. The free CoinGecko API has strict rate limits.'
+              : 'Unable to perform rug pull analysis at this time. Please try again later.'}
+          </p>
         </div>
       </div>
     );
