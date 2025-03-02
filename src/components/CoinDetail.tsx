@@ -17,6 +17,7 @@ import {
   Tooltip 
 } from 'recharts';
 import CoinNews from './CoinNews';
+import RugPullAnalysis from './RugPullAnalysis';
 
 interface CoinDetailProps {
   coinDetail: CoinDetailType | null;
@@ -339,6 +340,9 @@ const CoinDetail = ({
       <div className="mt-4 border-t border-border/40 pt-4">
         <CoinNews coinName={coinDetail.name} />
       </div>
+      
+      {/* Rug Pull Analysis Section */}
+      <RugPullAnalysis coinId={coinDetail.id} />
     </GlassMorphCard>
   );
 };
