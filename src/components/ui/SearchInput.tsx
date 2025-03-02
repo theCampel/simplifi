@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -7,24 +6,40 @@ interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   onSearch: (value: string) => void;
   className?: string;
   placeholder?: string;
+  debounceTime?: number;
 }
 
 const SearchInput = ({
   onSearch,
   className,
   placeholder = 'Search...',
+  debounceTime = 100, // Reduced from 300ms to 150ms for faster response
   ...props
 }: SearchInputProps) => {
   const [value, setValue] = useState('');
+  const [debouncedValue, setDebouncedValue] = useState('');
 
+  // Update local state immediately for responsive UI
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setValue(newValue);
-    onSearch(newValue);
+    setDebouncedValue(newValue);
   };
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(debouncedValue);
+    }, debounceTime);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [debouncedValue, debounceTime, onSearch]);
 
   const handleClear = () => {
     setValue('');
+    setDebouncedValue('');
     onSearch('');
   };
 

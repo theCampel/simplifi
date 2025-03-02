@@ -54,16 +54,3 @@ async def download_podcast(podcast_id: str):
             raise e
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/voices", response_model=Dict[str, Any])
-async def get_available_voices():
-    """Get available voice options for podcast generation"""
-    try:
-        # Dummy implementation for available voices
-        voices = [
-            {"id": "neutral", "name": "Neutral Voice", "description": "A balanced, professional tone"},
-            {"id": "excited", "name": "Excited Voice", "description": "An enthusiastic, energetic tone"},
-            {"id": "analytical", "name": "Analytical Voice", "description": "A technical, detailed tone"}
-        ]
-        return {"data": voices, "status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 

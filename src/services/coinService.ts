@@ -157,43 +157,79 @@ export const getTopCoins = async (perPage = 20, page = 1): Promise<Coin[]> => {
 export const searchCoins = async (query: string): Promise<Coin[]> => {
   if (!query || query.length < 2) return [];
   
+  // Immediately filter mock data for fast fallback
+  const filteredMockCoins = MOCK_COINS.filter(coin => 
+    coin.name.toLowerCase().includes(query.toLowerCase()) || 
+    coin.symbol.toLowerCase().includes(query.toLowerCase())
+  );
+  
   try {
-    // First search for coins that match the query
-    const searchResponse = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+    // Start a timeout to provide mock data if API takes too long
+    const timeoutPromise = new Promise<Coin[]>((resolve) => {
+      setTimeout(() => {
+        console.info('Search API call taking too long, returning mock data');
+        resolve(filteredMockCoins);
+      }, 400); // Return mock data after 400ms
+    });
     
-    if (!searchResponse.ok) {
-      // Return filtered mock data if API fails
-      return MOCK_COINS.filter(coin => 
-        coin.name.toLowerCase().includes(query.toLowerCase()) || 
-        coin.symbol.toLowerCase().includes(query.toLowerCase())
-      );
-    }
+    // Actual API search promise
+    const apiSearchPromise = (async () => {
+      try {
+        console.log(`Searching for coins matching "${query}"...`);
+        
+        // First search for coins that match the query
+        const searchResponse = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+        
+        if (!searchResponse.ok) {
+          if (searchResponse.status === 429) {
+            console.warn('CoinGecko API rate limit reached (429) on search endpoint');
+          } else {
+            console.warn(`API search failed with status: ${searchResponse.status}`);
+          }
+          return filteredMockCoins;
+        }
+        
+        const searchData = await searchResponse.json();
+        
+        // Check if we have coins in the result
+        if (!searchData.coins || searchData.coins.length === 0) {
+          console.info('No coins found in search results');
+          return [];
+        }
+        
+        console.log(`Found ${searchData.coins.length} matching coins, fetching details...`);
+        const coinIds = searchData.coins.slice(0, 10).map((coin: any) => coin.id).join(',');
+        
+        if (!coinIds) return filteredMockCoins;
+        
+        // Then fetch detailed data for those coins
+        const coinsResponse = await fetch(
+          `${API_BASE_URL}/coins/markets?vs_currency=usd&ids=${coinIds}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`
+        );
+        
+        if (!coinsResponse.ok) {
+          if (coinsResponse.status === 429) {
+            console.warn('CoinGecko API rate limit reached (429) on markets endpoint');
+          } else {
+            console.warn(`API market data failed with status: ${coinsResponse.status}`);
+          }
+          return filteredMockCoins;
+        }
+        
+        const coins = await coinsResponse.json();
+        console.log(`Successfully loaded ${coins.length} coins with details`);
+        return coins;
+      } catch (error) {
+        console.error('Error in API search:', error);
+        return filteredMockCoins;
+      }
+    })();
     
-    const searchData = await searchResponse.json();
-    const coinIds = searchData.coins.slice(0, 10).map((coin: any) => coin.id).join(',');
-    
-    if (!coinIds) return [];
-    
-    // Then fetch detailed data for those coins
-    const coinsResponse = await fetch(
-      `${API_BASE_URL}/coins/markets?vs_currency=usd&ids=${coinIds}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`
-    );
-    
-    if (!coinsResponse.ok) {
-      return MOCK_COINS.filter(coin => 
-        coin.name.toLowerCase().includes(query.toLowerCase()) || 
-        coin.symbol.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-    
-    return await coinsResponse.json();
+    // Race between the API call and the timeout
+    return Promise.race([apiSearchPromise, timeoutPromise]);
   } catch (error) {
     console.error('Error searching coins:', error);
-    // Return filtered mock coins if there's an error
-    return MOCK_COINS.filter(coin => 
-      coin.name.toLowerCase().includes(query.toLowerCase()) || 
-      coin.symbol.toLowerCase().includes(query.toLowerCase())
-    );
+    return filteredMockCoins;
   }
 };
 
